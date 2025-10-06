@@ -2,8 +2,8 @@
 # Dockerfile for for R base image with INLA installed
 # after installation, can be used interactively with:
 # sudo docker run --rm -it docker_r_base bash
-# R 4.5 on Ubuntu 22.04 (Jammy)
-FROM rstudio/r-base:4.5-jammy
+# R 4.5 on Ubuntu 24.04 (Noble)
+FROM rstudio/r-base:4.5-noble
 
 RUN echo 'APT::Install-Suggests "0";' > /etc/apt/apt.conf.d/00-docker && \
     echo 'APT::Install-Recommends "0";' >> /etc/apt/apt.conf.d/00-docker
@@ -11,16 +11,21 @@ RUN echo 'APT::Install-Suggests "0";' > /etc/apt/apt.conf.d/00-docker && \
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y build-essential gfortran pkg-config git \
     libcurl4-openssl-dev libxml2-dev libssl-dev \
-    libudunits2-dev libgdal-dev libgeos-dev libproj-dev libgsl-dev libfontconfig1-dev && \
+    libudunits2-dev libgdal-dev libgeos-dev libproj-dev libgsl-dev libfontconfig1-dev libabsl-dev cmake && \
     rm -rf /var/lib/apt/lists/*
 
 # Install INLA from its tarball (no remotes needed) and other packages.
-RUN R -e "install.packages('https://inla.r-inla-download.org/R/testing/src/contrib/INLA_25.06.13.tar.gz', \
+RUN R -e "install.packages('https://inla.r-inla-download.org/R/testing/src/contrib/INLA_25.09.04.tar.gz', \
           repos = NULL, type = 'source', dependencies = TRUE)"
 RUN R -e "install.packages('tidyverse', repos = c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
 RUN R -e "install.packages(c('tsModel','dlnm','spdep'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
 RUN R -e "install.packages(c('sf'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
 RUN R -e "install.packages(c('fmesher'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
+RUN R -e "install.packages(c('sn'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get install -y libc6 && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN rm -rf /var/lib/apt/lists/*
 RUN useradd -ms /bin/bash apprunner
