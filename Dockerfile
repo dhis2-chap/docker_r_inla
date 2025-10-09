@@ -8,8 +8,6 @@ RUN echo 'APT::Install-Recommends "0";' >> /etc/apt/apt.conf.d/00-docker
 RUN DEBIAN_FRONTEND=noninteractive \
   apt-get update && \
   apt-get install -y libudunits2-dev libgdal-dev libssl-dev libfontconfig1-dev libgsl-dev
-RUN DEBIAN_FRONTEND=noninteractive \
-  apt-get install -y libabsl-dev
 #RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages("INLA", repos=c(getOption("repos")), dep=TRUE)'
 RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages("remotes", repos=c(getOption("repos")), dep=TRUE)'
 RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); library(remotes); remotes::install_version("INLA", version="24.05.10",repos=c(getOption("repos"), INLA="https://inla.r-inla-download.org/R/testing"), dep=TRUE)'
@@ -17,8 +15,6 @@ RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; op
 RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages("tidyverse", repos=c(getOption("repos"), dep=TRUE))'
 RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages(c("tsModel", "dlnm"), repos=c(getOption("repos"), dep=TRUE))'
 RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages(c("spdep"), repos=c(getOption("repos"), dep=TRUE))'
-RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages(c("xgboost"), repos=c(getOption("repos"), dep=TRUE))'
-RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages(c("fmesher"), repos=c(getOption("repos"), dep=TRUE))'
 RUN rm -rf /var/lib/apt/lists/*
 RUN useradd -ms /bin/bash apprunner
 RUN echo "apprunner:apprunner" | chpasswd
