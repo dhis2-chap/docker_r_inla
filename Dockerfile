@@ -2,30 +2,35 @@
 # Dockerfile for for R base image with INLA installed
 # after installation, can be used interactively with:
 # sudo docker run --rm -it docker_r_base bash
-# R 4.5 on Ubuntu 24.04 (Noble)
-FROM rstudio/r-base:4.5-noble
-
-RUN echo 'APT::Install-Suggests "0";' > /etc/apt/apt.conf.d/00-docker && \
-    echo 'APT::Install-Recommends "0";' >> /etc/apt/apt.conf.d/00-docker
+FROM rstudio/r-base:4.4-jammy
+RUN echo 'APT::Install-Suggests "0";' >> /etc/apt/apt.conf.d/00-docker
+RUN echo 'APT::Install-Recommends "0";' >> /etc/apt/apt.conf.d/00-docker
+RUN DEBIAN_FRONTEND=noninteractive \
+  apt-get update && \
+  apt-get install -y libudunits2-dev libgdal-dev libssl-dev libfontconfig1-dev libgsl-dev
+RUN DEBIAN_FRONTEND=noninteractive \
+  apt-get install -y libabsl-dev
+#RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages("INLA", repos=c(getOption("repos")), dep=TRUE)'
+RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages("remotes", repos=c(getOption("repos")), dep=TRUE)'
+RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); library(remotes); remotes::install_version("INLA", version="24.05.10",repos=c(getOption("repos"), INLA="https://inla.r-inla-download.org/R/testing"), dep=TRUE)'
+#RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages("https://inla.r-inla-download.org/R/stable/src/contrib/INLA_24.12.11.tar.gz", repos=c(getOption("repos")), dep=TRUE)'
+RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages("tidyverse", repos=c(getOption("repos"), dep=TRUE))'
+RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages(c("tsModel", "dlnm"), repos=c(getOption("repos"), dep=TRUE))'
+RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages(c("spdep"), repos=c(getOption("repos"), dep=TRUE))'
+RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages(c("xgboost"), repos=c(getOption("repos"), dep=TRUE))'
+RUN R -e 'r = getOption("repos"); r["CRAN"] = "http://cran.us.r-project.org"; options(repos = r); install.packages(c("fmesher"), repos=c(getOption("repos"), dep=TRUE))'
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install -y build-essential gfortran pkg-config git \
-    libcurl4-openssl-dev libxml2-dev libssl-dev \
-    libudunits2-dev libgdal-dev libgeos-dev libproj-dev libgsl-dev libfontconfig1-dev libabsl-dev cmake && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install INLA from its tarball (no remotes needed) and other packages.
-RUN R -e "install.packages('https://inla.r-inla-download.org/R/testing/src/contrib/INLA_25.09.04.tar.gz', \
-          repos = NULL, type = 'source', dependencies = TRUE)"
-RUN R -e "install.packages('tidyverse', repos = c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
-RUN R -e "install.packages(c('tsModel','dlnm','spdep'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
-RUN R -e "install.packages(c('sf'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
+    apt-get install -y libabsl-dev
+RUN R -e "install.packages(c('pak'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
+# hack: this installs dependencies for fmesher, but fails on fmesher, but then fmesher install works after
+#RUN R -e "pak::pkg_install('inlabru-org/fmesher@stable')"
+RUN R -e "pak::pak('sf')"
 RUN R -e "install.packages(c('fmesher'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
-RUN R -e "install.packages(c('sn'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
+RUN R -e "install.packages(c('xgboost'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
+RUN R -e "install.packages(c('spdep'), repos=c(CRAN='https://cloud.r-project.org'), dependencies=TRUE)"
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install -y libc6 && \
-    rm -rf /var/lib/apt/lists/*
+
 
 RUN rm -rf /var/lib/apt/lists/*
 RUN useradd -ms /bin/bash apprunner
